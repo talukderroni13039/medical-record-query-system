@@ -1,0 +1,31 @@
+# Local hooks only: they use the project's locked tool versions via `uv run`.
+repos:
+  - repo: local
+    hooks:
+      - id: block-anthropic-keys
+        name: block Anthropic API keys
+        language: pygrep
+        entry: "sk-ant-[A-Za-z0-9_-]{8,}"
+        exclude: "^\\.pre-commit-config\\.yaml$"
+      - id: block-env-files
+        name: block .env files (except .env.example)
+        language: fail
+        entry: ".env files must never be committed"
+        files: "(^|/)\\.env(\\..*)?$"
+        exclude: "(^|/)\\.env\\.example$"
+      - id: ruff-check
+        name: ruff check
+        language: system
+        entry: uv run ruff check --fix
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        language: system
+        entry: uv run ruff format
+        types: [python]
+      - id: mypy
+        name: mypy (strict, src)
+        language: system
+        entry: uv run mypy src
+        pass_filenames: false
+        types: [python]
