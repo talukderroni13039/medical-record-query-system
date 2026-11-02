@@ -1,8 +1,13 @@
 """Test doubles shared by unit and integration tests (no model, no network)."""
 
 import hashlib
+import json
 import math
 import re
+from pathlib import Path
+from typing import Any
+
+from src.llm.schemas import ContextChunk, GeneratedAnswer
 
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
@@ -40,3 +45,39 @@ class FakeEmbedder:
     def embed_query(self, text: str) -> list[float]:
         self.queries.append(text)
         return self._vector(text)
+
+
+# ---------------------------------------------------------------- answer generation
+
+LLM_FIXTURE = Path(__file__).parent / "fixtures" / "llm_answer.json"
+
+
+def load_llm_fixture() -> dict[str, Any]:
+    """The real Claude response saved by the first live test (reused by mocked tests)."""
+    return dict(json.loads(LLM_FIXTURE.read_text(encoding="utf-8")))
+
+
+class FakeAnswerGenerator:
+    """AnswerGenerator double: returns a fixed answer, raises, or cites the first chunk."""
+
+    model_name = "fake-llm"
+
+    def __init__(
+        self, answer: GeneratedAnswer | None = None, error: Exception | None = None
+    ) -> None:
+        self.answer = answer
+        self.error = error
+        self.calls: list[tuple[str, list[ContextChunk]]] = []
+
+    async def generate(self, question: str, chunks: list[ContextChunk]) -> GeneratedAnswer:
+        self.calls.append((question, chunks))
+        if self.error is not None:
+            raise self.error
+        if self.answer is not None:
+            return self.answer
+        first = chunks[0].chunk_id
+        return GeneratedAnswer(
+            answer=f"According to the records: {chunks[0].text} [{first}]",
+            cited_chunk_ids=[first],
+            insufficient_context=False,
+        )

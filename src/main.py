@@ -24,11 +24,10 @@ from src.api_router import api_router  # noqa: E402
 from src.core.dependencies import get_embedder, get_vector_store  # noqa: E402
 from src.core.exception_handlers import global_exception_handler  # noqa: E402
 from src.core.exceptions import AppError  # noqa: E402
-from src.core.lifespan import lifespan  # noqa: E402
+from src.core.lifespan import answer_provider, lifespan  # noqa: E402
 from src.core.middleware import RequestContextMiddleware  # noqa: E402
 from src.core.schemas import ApiResponse, ErrorResponse, HealthResult, ResponseMeta  # noqa: E402
 from src.embeddings.base import Embedder  # noqa: E402
-from src.utils.env import env_str  # noqa: E402
 from src.vectorstore.base import VectorStore  # noqa: E402
 
 logging.basicConfig(
@@ -74,7 +73,7 @@ def create_app() -> FastAPI:
             environment=APP_ENV,
             model_loaded=embedder is not None,
             vector_store="ok",
-            answer_provider=env_str("ANSWER_PROVIDER", "none"),
+            answer_provider=answer_provider(),
         )
         return ApiResponse(data=result, meta=ResponseMeta.from_request(request))
 

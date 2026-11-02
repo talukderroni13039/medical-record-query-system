@@ -1,0 +1,17 @@
+{
+  "question": "Which patient is allergic to latex?",
+  "retrieved_chunk_ids": [
+    "P-0024.md:4",
+    "P-0025.md:4",
+    "P-0005.md:4",
+    "P-0017.md:4",
+    "P-0028.md:4"
+  ],
+  "answer": {
+    "answer": "Patient P-0024 is allergic to latex (contact dermatitis) [P-0024.md:4].",
+    "cited_chunk_ids": [
+      "P-0024.md:4"
+    ],
+    "insufficient_context": false
+  }
+}

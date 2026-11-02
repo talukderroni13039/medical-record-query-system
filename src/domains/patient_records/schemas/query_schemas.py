@@ -3,6 +3,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from src.llm.schemas import GeneratedAnswer
+
 DEFAULT_TOP_K = int(os.getenv("DEFAULT_TOP_K", "5"))
 MAX_TOP_K = int(os.getenv("MAX_TOP_K", "20"))
 
@@ -38,6 +40,14 @@ class QueryRequest(BaseModel):
     question: Question
     top_k: int = Field(default=DEFAULT_TOP_K, ge=1, le=MAX_TOP_K)
     filters: QueryFilters = Field(default_factory=QueryFilters)
+    generate_answer: bool = Field(
+        default=False,
+        description=(
+            "Also return a cited answer written by the configured LLM from the retrieved chunks. "
+            "Requires ANSWER_PROVIDER=anthropic (sends chunk text to the Anthropic API; "
+            "synthetic data only). Not medical advice."
+        ),
+    )
 
 
 class ChunkSource(BaseModel):
@@ -58,3 +68,6 @@ class RetrievedChunk(BaseModel):
 class QueryResult(BaseModel):
     question: str
     results: list[RetrievedChunk]
+    answer: GeneratedAnswer | None = Field(
+        default=None, description="Present only when generate_answer=true."
+    )

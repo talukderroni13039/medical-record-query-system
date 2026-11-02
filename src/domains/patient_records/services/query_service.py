@@ -5,7 +5,12 @@ import logging
 import re
 import time
 
-from src.core.exceptions import CollectionEmptyError, InvalidInputError
+from src.core.exceptions import (
+    AnswerGenerationDisabledError,
+    AnswerGenerationError,
+    CollectionEmptyError,
+    InvalidInputError,
+)
 from src.domains.patient_records.chunking.record_parser import KNOWN_SECTIONS, canonical_section
 from src.domains.patient_records.schemas import (
     ChunkSource,
@@ -16,6 +21,8 @@ from src.domains.patient_records.schemas import (
     StatsResult,
 )
 from src.embeddings.base import Embedder
+from src.llm.base import AnswerGenerator
+from src.llm.schemas import ContextChunk, GeneratedAnswer
 from src.vectorstore.base import SearchHit, VectorStore, WhereFilter
 
 logger = logging.getLogger(__name__)
@@ -62,10 +69,26 @@ def to_retrieved_chunk(hit: SearchHit) -> RetrievedChunk:
     )
 
 
+NO_RESULTS_ANSWER = GeneratedAnswer(
+    answer="No matching record chunks were found, so this cannot be answered from the records.",
+    cited_chunk_ids=[],
+    insufficient_context=True,
+)
+
+
 class QueryService:
-    def __init__(self, embedder: Embedder, store: VectorStore) -> None:
+    def __init__(
+        self,
+        embedder: Embedder,
+        store: VectorStore,
+        answer_generator: AnswerGenerator | None = None,
+        *,
+        max_answer_chunks: int = 8,
+    ) -> None:
         self._embedder = embedder
         self._store = store
+        self._answer_generator = answer_generator
+        self._max_answer_chunks = max_answer_chunks
 
     def _retrieve(self, request: QueryRequest, where: WhereFilter | None) -> list[SearchHit]:
         if self._store.count() == 0:
@@ -75,18 +98,52 @@ class QueryService:
 
     async def query(self, request: QueryRequest) -> QueryResult:
         started = time.perf_counter()
+        if request.generate_answer and self._answer_generator is None:
+            raise AnswerGenerationDisabledError(
+                "Answer generation is disabled (ANSWER_PROVIDER=none). "
+                "Retry with generate_answer=false for retrieval-only results."
+            )
         where = build_where(request.filters)
         # Embedding + search are CPU-bound / blocking: keep them off the event loop.
         hits = await asyncio.to_thread(self._retrieve, request, where)
         results = [to_retrieved_chunk(h) for h in hits]
+        answer = await self._answer(request, results) if request.generate_answer else None
         logger.info(
-            "Query done in %.0fms: top_k=%d filters=%s hits=%d",
+            "Query done in %.0fms: top_k=%d filters=%s hits=%d answer=%s",
             (time.perf_counter() - started) * 1000,
             request.top_k,
             where or {},
             len(results),
+            answer is not None,
         )
-        return QueryResult(question=request.question, results=results)
+        return QueryResult(question=request.question, results=results, answer=answer)
+
+    async def _answer(
+        self, request: QueryRequest, results: list[RetrievedChunk]
+    ) -> GeneratedAnswer:
+        if self._answer_generator is None:  # pragma: no cover - guarded at the top of query()
+            raise AnswerGenerationDisabledError("Answer generation is disabled")
+        if not results:
+            return NO_RESULTS_ANSWER  # nothing to ground on: no LLM call
+        context = [
+            ContextChunk(
+                chunk_id=r.chunk_id,
+                patient_id=r.source.patient_id,
+                section=r.source.section,
+                text=r.text,
+            )
+            for r in results[: self._max_answer_chunks]
+        ]
+        answer = await self._answer_generator.generate(request.question, context)
+        # Defence in depth: the generator validates too, but never trust a provider blindly.
+        allowed = {c.chunk_id for c in context}
+        unknown = [cid for cid in answer.cited_chunk_ids if cid not in allowed]
+        if unknown:
+            logger.warning("Answer cited %d chunk ID(s) outside the retrieved set", len(unknown))
+            raise AnswerGenerationError(
+                "Answer generation failed: the answer cited chunks that were not retrieved"
+            )
+        return answer
 
     def stats(self) -> StatsResult:
         store_stats = self._store.stats()

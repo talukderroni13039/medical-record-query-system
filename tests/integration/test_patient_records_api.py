@@ -15,9 +15,10 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.core import dependencies
+from src.core.exceptions import AnswerGenerationError, LLMTimeoutError
 from src.main import create_app
 from src.vectorstore.chroma_store import ChromaVectorStore
-from tests.fakes import FakeEmbedder
+from tests.fakes import FakeAnswerGenerator, FakeEmbedder
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 BASE = "/api/v1/patient-records"
@@ -202,6 +203,7 @@ def test_query_returns_envelope(ingested: TestClient) -> None:
         "record_date",
         "chunk_index",
     }
+    assert data["answer"] is None
 
 
 def test_query_with_both_filters(ingested: TestClient) -> None:
@@ -310,3 +312,41 @@ def test_unknown_route_404_still_has_request_id(client: TestClient) -> None:
 def test_openapi_lists_all_endpoints(client: TestClient) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     assert {"/health", f"{BASE}/ingest", f"{BASE}/query", f"{BASE}/stats"} <= set(paths)
+
+
+# ------------------------------------------------------------------ answer generation
+
+
+def test_generate_answer_disabled_400(ingested: TestClient) -> None:
+    payload = {"question": "penicillin", "generate_answer": True}
+    error = assert_error(
+        ingested.post(f"{BASE}/query", json=payload), 400, "ANSWER_GENERATION_DISABLED"
+    )
+    assert "ANSWER_PROVIDER" in error["message"]
+
+
+def test_generate_answer_with_fake_generator(app: FastAPI, ingested: TestClient) -> None:
+    generator = FakeAnswerGenerator()
+    app.dependency_overrides[dependencies.get_answer_generator] = lambda: generator
+    payload = {"question": "penicillin rash", "top_k": 3, "generate_answer": True}
+    data = assert_success(ingested.post(f"{BASE}/query", json=payload))
+    answer = data["answer"]
+    assert set(answer) == {"answer", "cited_chunk_ids", "insufficient_context"}
+    assert answer["cited_chunk_ids"] == [data["results"][0]["chunk_id"]]
+    assert answer["insufficient_context"] is False
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code"),
+    [
+        (LLMTimeoutError("Answer generation timed out"), 504, "LLM_TIMEOUT"),
+        (AnswerGenerationError("Answer generation failed"), 502, "ANSWER_GENERATION_FAILED"),
+    ],
+)
+def test_generate_answer_errors_mapped(
+    app: FastAPI, ingested: TestClient, error: Exception, status: int, code: str
+) -> None:
+    generator = FakeAnswerGenerator(error=error)
+    app.dependency_overrides[dependencies.get_answer_generator] = lambda: generator
+    payload = {"question": "penicillin", "generate_answer": True}
+    assert_error(ingested.post(f"{BASE}/query", json=payload), status, code)

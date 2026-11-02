@@ -11,9 +11,11 @@ from src.domains.patient_records.schemas.query_schemas import (
     QueryResult,
     RetrievedChunk,
 )
+from src.llm.schemas import GeneratedAnswer
 
 __all__ = [
     "ChunkSource",
+    "GeneratedAnswer",
     "IngestRequest",
     "IngestionResult",
     "QueryFilters",

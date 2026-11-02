@@ -14,6 +14,7 @@ from src.core.exceptions import ModelNotReadyError, VectorStoreError
 from src.domains.patient_records.services.ingestion_service import IngestionService
 from src.domains.patient_records.services.query_service import QueryService
 from src.embeddings.base import Embedder
+from src.llm.base import AnswerGenerator
 from src.utils.env import env_bool, env_int, env_str
 from src.vectorstore.base import VectorStore
 
@@ -33,6 +34,12 @@ def get_vector_store(request: Request) -> VectorStore:
     if store is None:
         raise VectorStoreError("Vector store is not available")
     return store
+
+
+def get_answer_generator(request: Request) -> AnswerGenerator | None:
+    """None when ANSWER_PROVIDER=none: the query service then rejects generate_answer=true."""
+    generator: AnswerGenerator | None = getattr(request.app.state, "answer_generator", None)
+    return generator
 
 
 def get_ingest_lock() -> threading.Lock:
@@ -63,5 +70,11 @@ def get_ingestion_service(
 def get_query_service(
     embedder: Annotated[Embedder, Depends(get_embedder)],
     store: Annotated[VectorStore, Depends(get_vector_store)],
+    answer_generator: Annotated[AnswerGenerator | None, Depends(get_answer_generator)],
 ) -> QueryService:
-    return QueryService(embedder, store)
+    return QueryService(
+        embedder,
+        store,
+        answer_generator,
+        max_answer_chunks=env_int("LLM_MAX_CONTEXT_CHUNKS", 8),
+    )
