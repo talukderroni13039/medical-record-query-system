@@ -5,7 +5,7 @@ repos:
       - id: block-anthropic-keys
         name: block Anthropic API keys
         language: pygrep
-        entry: "sk-ant-[A-Za-z0-9_-]{8,}"
+        entry: "sk[-]ant[-][A-Za-z0-9_-]{8,}"  # bracketed so this file itself never contains the literal prefix
         exclude: "^\\.pre-commit-config\\.yaml$"
       - id: block-env-files
         name: block .env files (except .env.example)
