@@ -14,6 +14,11 @@ load_dotenv(f".env.{APP_ENV}")  # never overrides variables already set (shell /
 import logging  # noqa: E402
 
 from fastapi import FastAPI  # noqa: E402
+from fastapi.exceptions import RequestValidationError  # noqa: E402
+
+from src.core.exception_handlers import global_exception_handler  # noqa: E402
+from src.core.exceptions import AppError  # noqa: E402
+from src.core.middleware import RequestContextMiddleware  # noqa: E402
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO").upper(),
@@ -30,6 +35,12 @@ def create_app() -> FastAPI:
             "Retrieval only by default; **not medical advice**."
         ),
     )
+
+    app.add_middleware(RequestContextMiddleware)
+    # One handler function, registered three times (see core/exception_handlers.py).
+    app.add_exception_handler(AppError, global_exception_handler)
+    app.add_exception_handler(RequestValidationError, global_exception_handler)
+    app.add_exception_handler(Exception, global_exception_handler)
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:
