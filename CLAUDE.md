@@ -16,7 +16,8 @@ $env:APP_ENV="uat"; uv run uvicorn src.main:app            # uat
 uv run pytest                                        # mocked tests + coverage (no model, no API)
 uv run pytest -m model --no-cov                      # real embedding model (downloads once)
 uv run pytest -m live --no-cov                       # real Claude calls (budget-capped, max 5 cases)
-uv run python scripts/evaluate_retrieval.py          # golden set -> hit@1/hit@5/MRR
+uv run python scripts/evaluate_retrieval.py          # golden set -> hit@1/hit@5/MRR (docs/EVALUATION.md)
+$env:RECORDS_DIR="./samples/records"; $env:CHROMA_PATH="./data/chroma_samples"   # 5-record demo (docs/RUNNING_AND_SWAGGER.md)
 uv run ruff check .; uv run ruff format .            # lint / format
 uv run mypy src                                      # strict type check
 docker build -t medical-record-query .
@@ -74,8 +75,8 @@ docker run --env-file .env.uat -p 8000:8000 -v "${PWD}/data/chroma_uat:/app/data
 - Migrations: Alembic (`alembic/`, `alembic.ini`). Never call `create_all` in production code.
 
 ## 9. Testing rules
-- Default `uv run pytest`: `FakeEmbedder` (8-dim, deterministic), `chromadb.EphemeralClient()`, and `FakeAnswerGenerator`.
-  **Zero model downloads and zero API calls.** Coverage of `src/` must be ≥ 80% (enforced in `addopts`).
+- Default `uv run pytest`: `FakeEmbedder` (8-dim, deterministic), `chromadb.EphemeralClient()`, and `FakeAnswerGenerator`
+  (`tests/fakes.py`). **Zero model downloads and zero API calls.** An autouse fixture blocks non-localhost sockets. Coverage of `src/` must be ≥ 80% (enforced in `addopts`).
 - `@pytest.mark.model`: real bge model. Excluded by default.
 - `@pytest.mark.live`: real Claude. Excluded by default, **max 5 cases**, `max_retries=1`, ≤ 5 chunks.
   Every attempt is counted in `tests/.live_call_budget.json` (gitignored). At **50** the fixture fails with

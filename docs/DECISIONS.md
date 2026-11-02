@@ -29,3 +29,8 @@ One line per deviation: **what** — *why*.
 - **At most `LLM_MAX_CONTEXT_CHUNKS` (default 8) retrieved chunks go to Claude** — this caps prompt size and data exposure independently of `top_k`.
 - **Chunk text is XML-escaped inside `<chunk>` tags, and the prompt says chunk text is data, not instructions** — basic prompt-injection hygiene for record content.
 - **Health and `main.py` read `ANSWER_PROVIDER` through `core.lifespan.answer_provider()`** — one normalisation point (trimmed, lower-cased).
+- **Retrieval-evaluation configs share an embedding cache** — identical chunk texts across configs are embedded once (`CachingEmbedder` in the script). This changes run time only, not results.
+- **Default tests block outbound sockets (autouse fixture) and drop `ANTHROPIC_API_KEY` from the env** — "zero API calls in `uv run pytest`" is enforced, not just intended.
+- **Docker: records baked in at `/app/data/records`; model cache and Chroma index are volumes; `HF_HUB_OFFLINE=1` and `ANSWER_PROVIDER=none` by default in the image** — the image is on-prem-safe by default and stays small (no 1.3 GB model layer).
+- **`.env.uat` not created by the build** — the owner's rule is that agents don't create or edit `.env.dev` / `.env.uat`. Its exact (secret-free) content is in the README. The container smoke test used an equivalent scratch env file.
+- **Sample demo set in `samples/records/` (P-1001…P-1005) with `samples/QUESTIONS.md`** — hand-written, PII-free records with known answers for Swagger walkthroughs. They are kept separate from the generated evaluation corpus.

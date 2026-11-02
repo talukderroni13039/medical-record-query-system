@@ -253,8 +253,59 @@ Every non-secret value has a default in code. See [`.env.example`](.env.example)
 
 ---
 
-## 8. Development
+## 8. Evaluation
+
+20 paraphrased golden questions over the 28 synthetic records (`data/eval/golden_set.json`):
+
+| Defaults (section chunking 256/32, section prefix, BGE query instruction) | hit@1 | hit@5 | MRR |
+|---|---|---|---|
+| `BAAI/bge-large-en-v1.5`, Chroma cosine | 0.95 | **1.00** | 0.97 |
+
+Run it with `uv run python scripts/evaluate_retrieval.py`. The config comparison and its limitations are in [`docs/EVALUATION.md`](docs/EVALUATION.md).
+
+---
+
+## 9. Testing
+
+| Command | What runs | Network / cost |
+|---|---|---|
+| `uv run pytest` | Mocked unit + API tests, coverage gate ≥ 80% (currently ~98%) | **None.** Outbound sockets are blocked by a fixture; uses `FakeEmbedder`, in-memory Chroma, and `FakeAnswerGenerator` |
+| `uv run pytest -m model --no-cov` | Real bge model: 1024-dim normalized vectors and a semantic sanity check | Model download once |
+| `uv run pytest -m live --no-cov` | 5 real Claude answer tests | Real API calls, capped at **50 for the whole build** via `tests/.live_call_budget.json` |
+
+---
+
+## 10. Docker (UAT)
+
+Multi-stage image: `python:3.12-slim`, uv with a frozen lock, CPU-only torch, non-root user (`app`, uid 10001). No `.env*` files are copied into the image. The model and the index are volumes, not baked in.
+
+`.env.uat` (create it locally; it is gitignored and needs no secrets):
+
+```dotenv
+APP_ENV=uat
+LOG_LEVEL=INFO
+HF_HUB_OFFLINE=1
+CHROMA_PATH=./data/chroma_uat
+RECORDS_DIR=./data/records
+ANSWER_PROVIDER=none
+```
+
+```powershell
+docker build -t medical-record-query .
+docker run --env-file .env.uat -p 8000:8000 `
+  -v "${PWD}/data/chroma_uat:/app/data/chroma_uat" `
+  -v "${HOME}/.cache/huggingface:/home/app/.cache/huggingface" `
+  medical-record-query
+# then: GET http://127.0.0.1:8000/health  ->  "model_loaded": true, "environment": "uat"
+#       POST /api/v1/patient-records/ingest, then /query
+```
+
+---
+
+## 11. Development
 
 See [`CLAUDE.md`](CLAUDE.md) for commands, architecture rules, and conventions,
-[`docs/DECISIONS.md`](docs/DECISIONS.md) for deviations from the architecture doc, and
-[`docs/EVALUATION.md`](docs/EVALUATION.md) for retrieval metrics.
+[`docs/DECISIONS.md`](docs/DECISIONS.md) for deviations from the architecture doc,
+[`docs/EVALUATION.md`](docs/EVALUATION.md) for retrieval metrics, and
+[`docs/RUNNING_AND_SWAGGER.md`](docs/RUNNING_AND_SWAGGER.md) for a hands-on walkthrough with the 5 sample records in
+`samples/records/` and the test questions in `samples/QUESTIONS.md`.
