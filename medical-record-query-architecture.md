@@ -185,25 +185,17 @@ They are infrastructure, like `llm/` in Week 1: any future domain (e.g. lab repo
 class Embedder(Protocol):
     model_name: str
     dimensions: int
-
     def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
     def embed_query(self, text: str) -> list[float]: ...
 
-
 # vectorstore/base.py
 class VectorStore(Protocol):
-    def upsert(
-        self,
-        ids: list[str],
-        embeddings: list[list[float]],
-        documents: list[str],
-        metadatas: list[dict],
-    ) -> None: ...
+    def upsert(self, ids: list[str], embeddings: list[list[float]],
+               documents: list[str], metadatas: list[dict]) -> None: ...
     def delete_by_file(self, file_name: str) -> None: ...
     def get_file_hash(self, file_name: str) -> str | None: ...
-    def query(
-        self, embedding: list[float], top_k: int, where: dict | None = None
-    ) -> list[SearchHit]: ...
+    def query(self, embedding: list[float], top_k: int,
+              where: dict | None = None) -> list[SearchHit]: ...
     def stats(self) -> StoreStats: ...
 ```
 

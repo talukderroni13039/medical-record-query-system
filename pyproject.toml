@@ -41,7 +41,7 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["data", ".hf_cache"]
+extend-exclude = ["data", ".hf_cache", "*.md"]  # never reformat code blocks in docs
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "RUF", "ASYNC", "S", "PT", "C4", "PL"]
