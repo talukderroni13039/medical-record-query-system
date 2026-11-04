@@ -1,0 +1,11 @@
+# Patient Record: P-0102
+- Age band: 60-69
+
+## Chief Complaint
+Wheezing at night.
+
+## Medications
+- Albuterol inhaler as needed
+
+## Allergies
+Latex (contact dermatitis).

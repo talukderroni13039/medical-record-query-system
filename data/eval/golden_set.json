@@ -1,0 +1,25 @@
+{
+  "description": "Golden questions for data/records (generated with seed 42). A result is a hit when its patient_id is in expected_patient_ids and, if expected_section is set, its section matches. Questions are paraphrased so they do not copy the record wording.",
+  "questions": [
+    {"id": "q01", "question": "Which patient is allergic to latex?", "expected_patient_ids": ["P-0024"], "expected_section": "Allergies"},
+    {"id": "q02", "question": "Who has a sulfa drug allergy?", "expected_patient_ids": ["P-0011"], "expected_section": "Allergies"},
+    {"id": "q03", "question": "Which patient needs an EpiPen because of a seafood allergy?", "expected_patient_ids": ["P-0021"], "expected_section": "Allergies"},
+    {"id": "q04", "question": "Who gets sick and throws up after taking codeine?", "expected_patient_ids": ["P-0019"], "expected_section": "Allergies"},
+    {"id": "q05", "question": "Which patient has a nut allergy that makes their throat swell?", "expected_patient_ids": ["P-0009"], "expected_section": "Allergies"},
+    {"id": "q06", "question": "Who had trouble breathing after taking aspirin?", "expected_patient_ids": ["P-0003"], "expected_section": "Allergies"},
+    {"id": "q07", "question": "Which patient reacts badly to CT contrast dye?", "expected_patient_ids": ["P-0007"], "expected_section": "Allergies"},
+    {"id": "q08", "question": "Who has a severe reaction to insect stings?", "expected_patient_ids": ["P-0006"], "expected_section": "Allergies"},
+    {"id": "q09", "question": "Which patient cannot take erythromycin?", "expected_patient_ids": ["P-0025"], "expected_section": "Allergies"},
+    {"id": "q10", "question": "Which patients are allergic to penicillin?", "expected_patient_ids": ["P-0005", "P-0017", "P-0028"], "expected_section": "Allergies"},
+    {"id": "q11", "question": "Which patient has reduced kidney function with protein in the urine?", "expected_patient_ids": ["P-0001"], "expected_section": null},
+    {"id": "q12", "question": "Who has very low iron stores and anemia?", "expected_patient_ids": ["P-0003"], "expected_section": null},
+    {"id": "q13", "question": "Which patient broke a vertebra after a minor fall?", "expected_patient_ids": ["P-0004"], "expected_section": null},
+    {"id": "q14", "question": "Who is on an SSRI antidepressant?", "expected_patient_ids": ["P-0008"], "expected_section": "Medications"},
+    {"id": "q15", "question": "Which patient sees flashing zigzag lights before a headache?", "expected_patient_ids": ["P-0010"], "expected_section": null},
+    {"id": "q16", "question": "Who has wear-and-tear arthritis in the knee?", "expected_patient_ids": ["P-0015"], "expected_section": null},
+    {"id": "q17", "question": "Whose joint fluid showed uric acid crystals?", "expected_patient_ids": ["P-0017"], "expected_section": "Lab Results"},
+    {"id": "q18", "question": "Which patient's bad cholesterol is too high on a statin?", "expected_patient_ids": ["P-0028"], "expected_section": null},
+    {"id": "q19", "question": "Which patients have poorly controlled blood sugar?", "expected_patient_ids": ["P-0005", "P-0007"], "expected_section": null},
+    {"id": "q20", "question": "Who has an irregular heart rhythm and is on a blood thinner?", "expected_patient_ids": ["P-0021", "P-0025", "P-0027"], "expected_section": null}
+  ]
+}

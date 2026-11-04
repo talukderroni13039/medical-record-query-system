@@ -1,0 +1,87 @@
+[
+  {
+    "config": {
+      "name": "default",
+      "chunk_size": 256,
+      "chunk_overlap": 32,
+      "section_prefix": true,
+      "query_instruction": true
+    },
+    "chunks": 224,
+    "hit@1": 0.95,
+    "hit@5": 1.0,
+    "mrr": 0.975,
+    "misses@5": [],
+    "query_p50_ms": 147.8,
+    "query_p95_ms": 310.8,
+    "ingest_seconds": 51.7
+  },
+  {
+    "config": {
+      "name": "chunk_128",
+      "chunk_size": 128,
+      "chunk_overlap": 16,
+      "section_prefix": true,
+      "query_instruction": true
+    },
+    "chunks": 224,
+    "hit@1": 0.95,
+    "hit@5": 1.0,
+    "mrr": 0.975,
+    "misses@5": [],
+    "query_p50_ms": 247.6,
+    "query_p95_ms": 426.0,
+    "ingest_seconds": 0.4
+  },
+  {
+    "config": {
+      "name": "chunk_512",
+      "chunk_size": 512,
+      "chunk_overlap": 64,
+      "section_prefix": true,
+      "query_instruction": true
+    },
+    "chunks": 224,
+    "hit@1": 0.95,
+    "hit@5": 1.0,
+    "mrr": 0.975,
+    "misses@5": [],
+    "query_p50_ms": 174.0,
+    "query_p95_ms": 323.9,
+    "ingest_seconds": 0.4
+  },
+  {
+    "config": {
+      "name": "no_section_prefix",
+      "chunk_size": 256,
+      "chunk_overlap": 32,
+      "section_prefix": false,
+      "query_instruction": true
+    },
+    "chunks": 224,
+    "hit@1": 0.95,
+    "hit@5": 1.0,
+    "mrr": 0.975,
+    "misses@5": [],
+    "query_p50_ms": 840.9,
+    "query_p95_ms": 1027.1,
+    "ingest_seconds": 66.5
+  },
+  {
+    "config": {
+      "name": "no_query_instruction",
+      "chunk_size": 256,
+      "chunk_overlap": 32,
+      "section_prefix": true,
+      "query_instruction": false
+    },
+    "chunks": 224,
+    "hit@1": 1.0,
+    "hit@5": 1.0,
+    "mrr": 1.0,
+    "misses@5": [],
+    "query_p50_ms": 608.6,
+    "query_p95_ms": 851.7,
+    "ingest_seconds": 1.0
+  }
+]

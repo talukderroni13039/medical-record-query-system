@@ -1,0 +1,35 @@
+# --- Secrets / environment files (never commit) ---
+.env
+.env.dev
+.env.uat
+.env.*
+!.env.example
+
+# --- Python / tooling ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# --- Local data (vector index, model cache) ---
+data/chroma*/
+.hf_cache/
+models/cache/
+
+# --- Live API budget tracking (local only) ---
+tests/.live_call_budget.json
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

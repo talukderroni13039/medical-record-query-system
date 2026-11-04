@@ -1,0 +1,30 @@
+# Secrets / env files: never in the image (pass at runtime with --env-file)
+.env
+.env.*
+
+# Local data: the index is a volume; records are copied explicitly
+data/chroma*
+data/eval
+
+# Tooling / VCS / caches
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+.hf_cache
+.vscode
+.idea
+
+# Not needed at runtime
+tests
+scripts
+docs
+samples
+*.md
+.pre-commit-config.yaml
